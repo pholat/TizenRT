@@ -21,7 +21,6 @@
 # Description : Download script for ARTIK 05X
 
 source .config
-SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 source $(dirname "${BASH_SOURCE[0]}")/artik05x_cmn.sh
 SCRIPTS_PATH=${ARTIK05X_DIR_PATH}/scripts
 
