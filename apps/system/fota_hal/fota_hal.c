@@ -45,10 +45,8 @@ typedef struct priv_fotahal_handle_s priv_fotahal_handle_t;
  * Private Data
  ****************************************************************************/
 static uint32_t g_fota_fd;
-#ifdef CONFIG_SYSTEM_FOTA_SET_SPECIFIC
 static bool g_partition_set = false;
 static bool g_binary_set = false;
-#endif
 #ifdef CONFIG_SYSTEM_FOTA_DEVNAME
 static char fota_driver_path[20] = CONFIG_SYSTEM_FOTA_DEVNAME;
 #else
@@ -93,15 +91,12 @@ fotahal_handle_t fotahal_open(void)
 	g_fota_fd = fota_fd;
 	g_priv_handle.priv = &g_fota_fd;
 
-#ifdef CONFIG_SYSTEM_FOTA_SET_SPECIFIC
 	g_partition_set = false;
 	g_binary_set = false;
-#endif
 
 	return (fotahal_handle_t)&g_priv_handle;
 }
 
-#ifdef CONFIG_SYSTEM_FOTA_SET_SPECIFIC
 /****************************************************************************
  * Name: fotahal_get_partition
  *
@@ -169,7 +164,6 @@ fotahal_return_t fotahal_set_binary(fotahal_handle_t handle, uint32_t bin_id)
 	g_binary_set = true;
 	return FOTAHAL_RETURN_SUCCESS;
 }
-#endif
 
 /****************************************************************************
  * Name: fotahal_write

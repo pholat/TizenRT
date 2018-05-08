@@ -170,7 +170,9 @@ static void artik05x_configure_partitions(void)
 		if (!strncmp(types, "ftl,", 4)) {
 			if (ftl_initialize(partno, mtd_part)) {
 				lldbg("ERROR: failed to initialise mtd ftl errno :%d\n", errno);
-			}
+			} else {
+                printf("OK: Initialized: %d ftl\n",partno);
+            }
 		} else
 #endif
 #if defined(CONFIG_MTD_CONFIG)

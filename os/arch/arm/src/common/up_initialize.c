@@ -242,6 +242,10 @@ void up_initialize(void)
 	up_rnginitialize();
 #endif
 
+#ifdef CONFIG_FOTA_DRIVER
+    up_fotainitialize();
+#endif 
+
 	/* Initialize the system logging device */
 
 #ifdef CONFIG_SYSLOG_CHAR
