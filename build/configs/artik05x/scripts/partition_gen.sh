@@ -42,6 +42,11 @@ partname_list=${CONFIG_ARTIK05X_FLASH_PART_NAME:=${partname_list_default}}
 
 # OpenOCD cfg file to be created for flashing
 PARTITION_MAP_CFG=${PARTMAP_DIR_PATH}/partition_map.cfg
+FOTA_PARTITION_HEADER=${OS_DIR_PATH}/drivers/fota/partition_table.h
+
+# count partition num
+pp=( $(echo ${partname_list[@]} | tr ',' ' ') )
+partcnt=${#pp[@]}
 
 # Partition map text for auto generation
 PARTITION_MAP_HEADER="#
@@ -50,6 +55,16 @@ PARTITION_MAP_HEADER="#
 #	Name	  Description		Start address	Size		RO
 set partition_list {"
 PARTITION_MAP_FOOTER="}"
+PARTITION_STRUCT_HEADER="
+struct s_partition_map {
+    char* name;
+    unsigned int start;
+    unsigned int end;
+    int readonly;
+};
+#define PART_MAP_SIZE $partcnt
+struct s_partition_map g_partition_map[PART_MAP_SIZE]={"
+PARTITION_STRUCT_FOOTER="};"
 
 #Comma Separator
 IFS=","
@@ -70,6 +85,7 @@ echo -n "Generating partition map ... "
 
 # Add partition map header at the beginning of cfg file
 echo ${PARTITION_MAP_HEADER} > ${PARTITION_MAP_CFG}
+echo ${PARTITION_STRUCT_HEADER} > ${FOTA_PARTITION_HEADER}
 
 #Loop partition size list
 sum=0
@@ -134,10 +150,13 @@ do
 	echo "	${pname}	{ ${format}	${pstart}	${psize}" \
 		"	${ro} }" >> ${PARTITION_MAP_CFG}
 
+    echo "{\"${pname}\",${pstart},${psize},${ro}}," >> ${FOTA_PARTITION_HEADER}
+
 	let "id += 1"
 done
 
 # add termination text
 echo ${PARTITION_MAP_FOOTER} >> ${PARTITION_MAP_CFG}
+echo ${PARTITION_STRUCT_FOOTER} >> ${FOTA_PARTITION_HEADER}
 
 echo "Done"

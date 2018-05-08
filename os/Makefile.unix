@@ -464,6 +464,8 @@ PASS1_BUILDIR = $(BOARD_DIR)/userspace
 pass1deps: pass1dep $(USERLIBS)
 
 pass1: pass1deps
+	echo "AAAAAAAAAA"
+	$(call GEN_OTA_HEADER)
 ifeq ($(CONFIG_BUILD_2PASS),y)
 	$(Q) if [ ! -d "$(PASS1_BUILDIR)" ]; then \
 		echo "ERROR: PASS1_BUILDIR does not exist"; \
@@ -545,6 +547,7 @@ ifeq (download,$(firstword $(MAKECMDGOALS)))
 endif
 
 download:
+	echo "$(DOWNLOAD) $(DOWNLOAD_ARGS)"
 	$(call DOWNLOAD, $(DOWNLOAD_ARGS))
 
 ota_img:

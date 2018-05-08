@@ -36,6 +36,7 @@
 #include <tinyara/fs/fs.h>
 #include <tinyara/fs/ioctl.h>
 #include <tinyara/fota/fota.h>
+#include "partition_table.h"
 
 /************************************************************************************
  * Definitions
@@ -48,6 +49,7 @@
 /************************************************************************************
  * Private Function Prototypes
  ************************************************************************************/
+const char* fota_turbo="/dev/fotachar";
 
 static int fota_open(FAR struct file *filep);
 static int fota_close(FAR struct file *filep);
@@ -69,8 +71,9 @@ static const struct file_operations g_fotaops = {
 };
 
 static sem_t g_fota_open_sem;
-static bool g_fota_dev_opened = false;
+static int fota_fd;
 static bool g_fota_dev_written = false;
+static int foo_set_partition(uint32_t part_id);
 
 /************************************************************************************
  * Private Functions
@@ -84,7 +87,7 @@ static ssize_t fota_write(FAR struct file *filep, FAR const char *buffer, size_t
 	FAR fota_dev_t *dev = inode->i_private;
 	int ret = ERROR;
 
-	if (!g_fota_dev_opened) {
+	if (!fota_fd>0) {
 		dbg(" device is not opened, ret = %d\n", ret);
 		set_errno(EBADF);
 		return ret;
@@ -107,7 +110,7 @@ static ssize_t fota_read(FAR struct file *filep, FAR char *buffer, size_t buflen
 	FAR fota_dev_t *dev = inode->i_private;
 	int ret = ERROR;
 
-	if (!g_fota_dev_opened) {
+	if (!fota_fd) {
 		dbg(" device is not opened, ret = %d\n", ret);
 		set_errno(EBADF);
 		return ret;
@@ -126,7 +129,7 @@ static int fota_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 	FAR fota_dev_t *dev = inode->i_private;
 	int ret = ERROR;
 
-	if (!g_fota_dev_opened) {
+	if (!fota_fd) {
 		dbg(" device is not opened, ret = %d\n", ret);
 		set_errno(EBADF);
 		return ret;
@@ -173,7 +176,7 @@ static int fota_close(FAR struct file *filep)
 	FAR struct inode *inode = filep->f_inode;
 	FAR fota_dev_t *dev = inode->i_private;
 
-	if (!g_fota_dev_opened) {
+	if (!fota_fd) {
 		dbg(" device is not opened, ret = %d\n", ERROR);
 		set_errno(EBADF);
 		return ERROR;
@@ -184,10 +187,11 @@ static int fota_close(FAR struct file *filep)
 		dev->fota_write_flush();
 		g_fota_dev_written = false;
 	}
+    close(fota_fd);
+    bchdev_unregister(fota_turbo);
+    fota_fd=0;
 
 	sem_post(&g_fota_open_sem);
-	g_fota_dev_opened = false;
-
 	return OK;
 }
 
@@ -200,12 +204,24 @@ static int fota_close(FAR struct file *filep)
 static int fota_open(FAR struct file *filep)
 {
 	int ret;
-
+    char mntdev[16]={0};
+    int minor=0;
 	while (sem_wait(&g_fota_open_sem) != OK) ;
-	g_fota_dev_opened = true;
-	g_fota_dev_written = false;
-
-	ret = OK;
+    if( foo_set_partition(minor) ) {
+        printf("error %d\n", __LINE__);
+        return -1;
+    }
+    minor=get_ota_partition();
+    snprintf(mntdev, 16, "/dev/mtdblock%d", minor);
+    if ( (ret = bchdev_register(mntdev,fota_turbo,false))!=0 ) {
+        printf("error register %d\n",ret);
+    }
+    if ( !((fota_fd=open( fota_turbo, O_RDWR))>0) ) {
+        printf("error: %s :%d:%d:%s\n",mntdev, __LINE__, fota_fd, strerror(errno) );
+        ret=fota_fd;
+    } else {
+        ret =OK;
+    }
 	return ret;
 }
 
@@ -220,6 +236,8 @@ static int fota_open(FAR struct file *filep)
  *   Register fota driver
  *
  ************************************************************************************/
+
+
 int fota_register(FAR fota_dev_t *dev)
 {
 	const char *path = "/dev/fota";
@@ -233,4 +251,92 @@ int fota_register(FAR fota_dev_t *dev)
 	}
 
 	return register_driver(path, &g_fotaops, 0666, dev);
+}
+
+/// check address space in which we are
+static int foo_get_partition(void)
+{
+    int retval=-1; 
+    int i=0;
+    for (; i < PART_MAP_SIZE; ++i)
+    {
+        if ( ((void*)&i > (void*)g_partition_map[i].start) && ((void*)&i < (void*)g_partition_map[i].end) )
+            retval=1;
+            break;
+    }
+    return retval;
+}
+
+int get_ota_partition(void)
+{
+    int i=0,retval=-1;
+    for (; i < PART_MAP_SIZE; ++i)
+    {
+        if ( strcmp( "ota", g_partition_map[i].name) == 0 ) {
+            retval=i;
+            break;
+        }
+    }
+    return retval;
+}
+
+/// in part_id returns ota partition num
+static int foo_set_partition(uint32_t part_id)
+{
+    return 0;
+}
+
+static int foo_set_binary(uint32_t bin_id)
+{
+    // for ftl not needed
+    return 0;
+}
+
+static int foo_set_bootparam(fota_bootparam_type_t bootparam_type)
+{
+    // bootloader does that
+    return 0;
+}
+
+static int foo_read(FAR const char *buffer, size_t buflen)
+{
+    int ret=-1;
+    return ret;
+}
+
+static int foo_write(FAR const char *buffer, size_t buflen)
+{
+    return write(fota_fd,buffer,buflen);
+}
+
+static int foo_write_flush(void) 
+{
+    if ( fota_fd > 0 ) {
+        fflush(fota_fd);
+        return 0;
+    } else {
+        return -1;
+    }
+}
+
+static int foo_erase(void)
+{
+    return -1;
+}
+
+static fota_dev_t g_fotadevice = {
+    .fota_get_partition=foo_get_partition,
+    .fota_set_partition=foo_set_partition,
+    .fota_set_binary=foo_set_binary,
+    .fota_set_bootparam=foo_set_bootparam,
+    .fota_read=foo_read,
+    .fota_write=foo_write,
+    .fota_write_flush=foo_write_flush,
+    .fota_erase=foo_erase,
+    .mtd=0,
+};
+
+void up_fotainitialize(void) {
+	
+    (void)fota_register(&g_fotadevice);
 }

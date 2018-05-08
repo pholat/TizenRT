@@ -30,6 +30,7 @@
 #include <stdbool.h>
 #include <semaphore.h>
 #include <tinyara/fs/fs.h>
+#include <tinyara/fs/mtd.h>
 
 /************************************************************************************
  * Public Types
@@ -64,6 +65,8 @@ struct fota_dev_s {
 
 	/* Erase selected partition */
 	CODE int (*fota_erase)(void);
+
+    FAR struct mtd_dev_s *mtd;
 };
 
 typedef struct fota_dev_s fota_dev_t;
@@ -93,6 +96,7 @@ extern "C" {
  ************************************************************************************/
 
 int fota_register(FAR fota_dev_t *dev);
+void up_fotainitialize(void);
 
 #undef EXTERN
 #if defined(__cplusplus)
