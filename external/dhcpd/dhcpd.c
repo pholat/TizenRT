@@ -1612,7 +1612,6 @@ int dhcpd_run(void *arg)
 #endif
 
 		/* Now process the incoming DHCP message by its message type */
-        int ret=0;
         Evt evt;
         evt.size=0;
 
