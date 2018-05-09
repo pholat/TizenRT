@@ -100,14 +100,13 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <semaphore.h>
-#include <pthread.h>
-#include <netutils/netlib.h>
+
+#include "../../../../target_artik/tdoa_ms/ubus.h"
 
 /****************************************************************************
  * Global Data
  ****************************************************************************/
 sem_t g_dhcpd_sem;
-
 
 /****************************************************************************
  * Private Data
@@ -1548,7 +1547,9 @@ int dhcpd_run(void *arg)
 	/* Now loop indefinitely, reading packets from the DHCP server socket */
 
 	g_dhcpd_sockfd = -1;
+
 	g_dhcpd_quit = 0;
+	g_dhcpd_running = 1;
 
 	/* Create a socket to listen for requests from DHCP clients */
 	/* TODO : Need to add cancellation point */
@@ -1611,6 +1612,9 @@ int dhcpd_run(void *arg)
 #endif
 
 		/* Now process the incoming DHCP message by its message type */
+        int ret=0;
+        Evt evt;
+        evt.size=0;
 
 		switch (g_state.ds_optmsgtype) {
 		case DHCPDISCOVER:
@@ -1623,17 +1627,24 @@ int dhcpd_run(void *arg)
 
 		case DHCPREQUEST:
 			ndbg("DHCPREQUEST\n");
-			dhcpd_request();
+			ret=dhcpd_request();
+            if ( ret==OK ) evt.no = EvtDHCPD_ack;
+            else evt.no = EvtDHCPD_nack;
+            notify_bus_evt(&evt);
 			break;
 
 		case DHCPDECLINE:
 			ndbg("DHCPDECLINE\n");
-			dhcpd_decline();
+			ret=dhcpd_decline();
+            evt.no = EvtDHCPD_decline;
+            notify_bus_evt(&evt);
 			break;
 
 		case DHCPRELEASE:
 			ndbg("DHCPRELEASE\n");
-			dhcpd_release();
+            evt.no = EvtDHCPD_release;
+            notify_bus_evt(&evt);
+			ret=dhcpd_release();
 			break;
 
 		case DHCPINFORM:		/* Not supported */

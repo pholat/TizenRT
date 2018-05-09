@@ -38,6 +38,8 @@
 
 #include "slsiwifi_main.h"
 
+#include "../../../../../target_artik/tdoa_ms/ubus.h"
+
 #define DEBUG     0
 /* connections states */
 #define STATE_DISCONNECTED          0
@@ -163,6 +165,10 @@ void sw_linkUpHandler(slsi_reason_t *reason)
 		memset(connectedApName, 0, WPA_MAX_SSID_LEN);
 		printf_encode(connectedApName, WPA_MAX_SSID_LEN, reason->ssid, reason->ssid_len);
 		printf("Connected to network: bssid: %s, ssid: %s\n", reason->bssid, connectedApName);
+        Evt evt;
+        evt.size=0;
+        evt.no=EvtInetUp;
+        notify_bus_evt(&evt);
 		sem_post(&g_sem_join);	//tell the main thread to move on
 	} else {
 		printf("New Station connected bssid: %s \n", reason->bssid);
@@ -170,6 +176,9 @@ void sw_linkUpHandler(slsi_reason_t *reason)
 		if (inAuto) {			// we need to post to the sanity test that we have a connection
 			sem_post(&ap_conn_sem);
 		}
+        Evt evt;
+        evt.no=EvtInetUp;
+        notify_bus_evt(&evt);
 	}
 }
 
@@ -182,9 +191,15 @@ void sw_linkDownHandler(slsi_reason_t *reason)
 		} else {
 			printf("Disconnected from network\n");
 		}
+        Evt evt;
+        evt.no=EvtInetDown;
+        notify_bus_evt(&evt);
 		sem_post(&g_sem_join);	// need to tell the system that we have a link-down. Needed for doLeave()
 	} else if (g_mode == SLSI_WIFI_SOFT_AP_IF) {
 		printf("Station disconnected from network. bssid: %s\n", reason->bssid);
+        Evt evt;
+        evt.no=EvtInetDown;
+        notify_bus_evt(&evt);
 		WiFiIsConnected(&numStations, NULL);
 	}
 }

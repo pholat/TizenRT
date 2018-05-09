@@ -27,6 +27,7 @@
 #include <net/lwip/netif.h>
 #include <ocstack.h>
 #include "uuid/uuid.h"
+#include <stdlib.h>
 
 #if CONFIG_NSOCKET_DESCRIPTORS > 0
 extern struct netif *g_netdevices;
@@ -58,7 +59,6 @@ void uuid_unparse_lower(const uuid_t uu, char *out)
 
 int getifaddrs(struct ifaddrs **ifap)
 {
-	int ret = 0;
 	static struct ifaddrs ifa;
 	static struct sockaddr_in addr, netmask;
 	uint8_t flags;
@@ -69,11 +69,9 @@ int getifaddrs(struct ifaddrs **ifap)
 
 	struct netif *curr = g_netdevices;
 
-	if ((netlib_get_ipv4addr(curr->d_ifname, &addr.sin_addr) == -1)
-		|| (netlib_get_dripv4addr(curr->d_ifname, &netmask.sin_addr) == -1)
-		|| (netlib_getifstatus(curr->d_ifname, &flags) == -1)) {
-		goto error;
-	}
+	netlib_get_ipv4addr(curr->d_ifname, &addr.sin_addr);
+	netlib_get_dripv4addr(curr->d_ifname, &netmask.sin_addr);
+	netlib_getifstatus(curr->d_ifname, &flags);
 
 	ifa.ifa_next = NULL;
 	ifa.ifa_name = curr->d_ifname;
@@ -84,13 +82,16 @@ int getifaddrs(struct ifaddrs **ifap)
 
 	*ifap = &ifa;
 
-	return ret;
-error:
-	ret = -1;
-	return ret;
+	return 0;
 }
 
 unsigned int if_nametoindex(const char *ifname)
 {
 	return 0;					// TODO: Now supports only 1 device
+}
+
+const char *gai_strerror(int errcode)
+{
+	static const char *n_str = "null";
+	return n_str;
 }

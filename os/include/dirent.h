@@ -101,6 +101,10 @@
  * of char containing at least {NAME_MAX} plus one elements.
  */
 
+#ifndef NAME_MAX
+#define NAME_MAX 32
+#endif
+
 struct dirent {
 	uint8_t d_type;				/* type of file */
 	char d_name[NAME_MAX + 1];	/* filename */

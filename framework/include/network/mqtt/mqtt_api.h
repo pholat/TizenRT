@@ -33,6 +33,8 @@
  * Included Files
  ****************************************************************************/
 #include <tinyara/config.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 #define EXTERN extern "C"
