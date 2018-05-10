@@ -277,7 +277,7 @@ int cmd_ifconfig(int argc, char **argv)
 	}
 
 	if (badarg) {
-		nvdbg(fmtargrequired, argv[0]);
+		//nvdbg(fmtargrequired, argv[0]);
 		return ERROR;
 	}
 #ifdef CONFIG_NET_ETHERNET

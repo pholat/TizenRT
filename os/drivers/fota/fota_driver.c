@@ -176,6 +176,7 @@ static int fota_close(FAR struct file *filep)
 	FAR struct inode *inode = filep->f_inode;
 	FAR fota_dev_t *dev = inode->i_private;
 
+    printf("%d NOW!\n", __LINE__);
 	if (!fota_fd) {
 		dbg(" device is not opened, ret = %d\n", ERROR);
 		set_errno(EBADF);
@@ -187,8 +188,11 @@ static int fota_close(FAR struct file *filep)
 		dev->fota_write_flush();
 		g_fota_dev_written = false;
 	}
+    printf("%d NOW!\n", __LINE__);
     close(fota_fd);
+    printf("%d NOW!\n", __LINE__);
     bchdev_unregister(fota_turbo);
+    printf("%d NOW!\n", __LINE__);
     fota_fd=0;
 
 	sem_post(&g_fota_open_sem);
@@ -215,6 +219,7 @@ static int fota_open(FAR struct file *filep)
     snprintf(mntdev, 16, "/dev/mtdblock%d", minor);
     if ( (ret = bchdev_register(mntdev,fota_turbo,false))!=0 ) {
         printf("error register %d\n",ret);
+    } else {
     }
     if ( !((fota_fd=open( fota_turbo, O_RDWR))>0) ) {
         printf("error: %s :%d:%d:%s\n",mntdev, __LINE__, fota_fd, strerror(errno) );
@@ -260,9 +265,11 @@ static int foo_get_partition(void)
     int i=0;
     for (; i < PART_MAP_SIZE; ++i)
     {
-        if ( ((void*)&i > (void*)g_partition_map[i].start) && ((void*)&i < (void*)g_partition_map[i].end) )
-            retval=1;
+        if ( ( (void*)foo_get_partition > (void*)g_partition_map[i].start) && 
+                ((void*)foo_get_partition < (void*)(g_partition_map[i].end+g_partition_map[i].start) ) ) {
+            retval=i;
             break;
+        }
     }
     return retval;
 }

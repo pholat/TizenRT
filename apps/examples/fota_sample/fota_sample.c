@@ -24,6 +24,8 @@
 #include <apps/shell/tash.h>
 #endif
 #include <apps/system/fota_hal.h>
+#include <sys/types.h>          /* See NOTES */
+#include <sys/socket.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -47,14 +49,8 @@ int fota_sample(int argc, char *argv[])
 #endif
 {
 	int ret = ERROR;
-	int bin_id;
-	int max_bins;
 	uint32_t part_id;
-	uint32_t next_part_id;
-	char user_input;
-	char buffer[] = "dummy";
 	fotahal_handle_t fotahal_handle;
-	fotahal_bin_header_t fotahal_header;
 
 	printf("***********************************************************\n");
 	printf(" fota update is in progress !!!\n");
@@ -70,72 +66,78 @@ int fota_sample(int argc, char *argv[])
 	/* Get the current running partition */
 	part_id = fotahal_get_partition(fotahal_handle);
 	if (part_id == -1) {
-		printf("%s : fotahal_get_partition error\n", __func__);
+		printf("fotahal_get_partition error\n");
 		goto part_error;
 	}
 
 	printf(" current running partition is  [ OTA%d ]\n", part_id);
 
-	/* Decide the next partiton we can use, may be first free partition */
-	for (next_part_id = FOTA_PARTITION_OTA0; (next_part_id < FOTA_PARTITION_MAX)
-		 && next_part_id == part_id; next_part_id++) ;
 
-	if (next_part_id >= FOTA_PARTITION_MAX) {
-		printf("%s : No free partition left\n", __func__);
-		goto part_error;
+	printf("Wait for socket\n");
+	int socket_desc, client_sock, c, read_size;
+	struct sockaddr_in server, client;
+    // TODO make it so that there will be 4kB stack available for this thread ...
+	static char client_message[4096];
+
+	//Create socket
+	socket_desc = socket(AF_INET, SOCK_STREAM, 0);
+	if (socket_desc == -1) {
+		printf("Could not create socket");
+		return -1;
+	}
+	printf("Socket created");
+
+	//Prepare the sockaddr_in structure
+	server.sin_family = AF_INET;
+	server.sin_addr.s_addr = INADDR_ANY;
+	server.sin_port = htons(12345);
+
+	//Bind
+	if (bind(socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0) {
+		//print the error message
+		perror("bind failed. Error");
+		close(socket_desc);
+		return 1;
+	}
+	printf("bind done\n");
+
+	//Listen
+	if (listen(socket_desc, 3) < 0) {
+		printf("listen failed\n");
+		close(socket_desc);
+		return 1;
+	}
+	//Accept and incoming connection
+	printf("Waiting for incoming connections...\n");
+	c = sizeof(struct sockaddr_in);
+
+	//accept connection from an incoming client
+	client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t *)&c);
+	if (client_sock < 0) {
+		perror("accept failed");
+		close(socket_desc);
+		return 1;
+	}
+	printf("Connection accepted\n");
+
+	//Receive a message from client
+	while ((read_size = recv(client_sock, client_message, 4096, 0)) > 0) {
+        printf(".");
+        fflush(stdout);
+        if (fotahal_write(fotahal_handle, client_message, read_size) != FOTAHAL_RETURN_SUCCESS) {
+            printf("%s : fotahal_write error\n", __func__);
+            goto write_error;
+        }
+    }
+
+	if (read_size == 0) {
+		printf("client disconnected\n");
+	} else if (read_size == -1) {
+		printf("recv failed\n");
 	}
 
-	printf(" next fota update partition is [ OTA%d ]\n", next_part_id);
-
-	/* FIXME:
-	 * This is for fota sample test, Real application might need to handle
-	 * it differently.
-	 * We are not downloading binary from server.
-	 * Let's post a banner here to inform user to manually download the binary
-	 */
-
-	printf("*******  oh!! Fota Server is Down !!! ******\n");
-	printf(" please download fota binary manually using below step !!! \n");
-	printf("        [ make download TINYARA_OTA%d ]     \n", next_part_id);
-	printf("Is OTA%d binary manually downloaded? If yes press Y to continue [Y/N]\n", next_part_id);
-	user_input = getchar();
-	if (user_input != 'Y' && user_input != 'y') {
-		printf(" fota update cancled !!!\n");
-		printf("***********************************************************\n");
-		goto fota_exit;
-	}
-
-	if (fotahal_set_partition(fotahal_handle, next_part_id) != FOTAHAL_RETURN_SUCCESS) {
-		printf("%s : fotahal_set_partition error\n", __func__);
-		goto part_error;
-	}
-
-	/* max_bins = 1; for testing */
-	max_bins = 1;
-	for (bin_id = 0; bin_id < max_bins; bin_id++) {
-		/* Extract fota header from binary */
-		/* But unfortunately, we have not received binary,
-		 * hence for testing, construct binary header locally
-		 */
-		fotahal_header.fotahal_bin_id = bin_id;
-
-		if (fotahal_set_binary(fotahal_handle, fotahal_header.fotahal_bin_id)
-			!= FOTAHAL_RETURN_SUCCESS) {
-			printf("%s : fotahal_set_binary error\n", __func__);
-			goto part_error;
-		}
-
-		if (fotahal_write(fotahal_handle, buffer, 0) != FOTAHAL_RETURN_SUCCESS) {
-			printf("%s : fotahal_write error\n", __func__);
-			goto write_error;
-		}
-
-		/* Lets update boot param, to trigger fota update in next cycle */
-		if (fotahal_update_bootparam(fotahal_handle) != FOTAHAL_RETURN_SUCCESS) {
-			printf("%s : fotahal_update_bootparam error\n", __func__);
-			goto param_error;
-		}
-	}
+	close(client_sock);
+	close(socket_desc);
 
 	if (fotahal_close(fotahal_handle) != FOTAHAL_RETURN_SUCCESS) {
 		printf("%s : fotahal_close error\n", __func__);
@@ -148,9 +150,7 @@ int fota_sample(int argc, char *argv[])
 	ret = OK;
 
 close_error:
-param_error:
 write_error:
-fota_exit:
 part_error:
 	fotahal_close(fotahal_handle);
 open_error:

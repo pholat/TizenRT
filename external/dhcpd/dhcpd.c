@@ -66,6 +66,7 @@
 
 #define ndbg(...) printf(__VA_ARGS__)
 #define nvdbg(...) printf(__VA_ARGS__)
+#define ip_print(a) "%u.%u.%u.%u\n", (unsigned char)((htonl(a.s_addr) >> 24) & 0xff), (unsigned char)((htonl(a.s_addr) >> 16) & 0xff), (unsigned char)((htonl(a.s_addr) >> 8) & 0xff), (unsigned char)((htonl(a.s_addr) >> 0) & 0xff)
 
 #define ERROR (-1)
 #define OK    (0)
