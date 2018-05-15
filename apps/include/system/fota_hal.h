@@ -95,7 +95,7 @@ extern "C" {
  ****************************************************************************/
 fotahal_handle_t fotahal_open(void);
 
-#ifdef CONFIG_SYSTEM_FOTA_SET_SPECIFIC
+//#ifdef CONFIG_SYSTEM_FOTA_SET_SPECIFIC
 /****************************************************************************
  * Name: fotahal_get_partition
  *
@@ -120,7 +120,7 @@ fotahal_return_t fotahal_set_partition(fotahal_handle_t handle, fota_partition_i
  *   Set a binary type for fota write
  ****************************************************************************/
 fotahal_return_t fotahal_set_binary(fotahal_handle_t handle, uint32_t bin_id);
-#endif
+//#endif
 
 /****************************************************************************
  * Name: fotahal_write

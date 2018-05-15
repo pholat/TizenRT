@@ -480,6 +480,7 @@ typedef struct ip_mreq {
 #if 0
 #error LWIP_SOCKET_OFFSET does not work with external FD_SET!
 #endif
+#define FD_SETSIZE    (LWIP_SOCKET_OFFSET + MEMP_NUM_NETCONN)
 #elif FD_SETSIZE < MEMP_NUM_NETCONN
 #error "external FD_SETSIZE too small for number of sockets"
 #endif							/* FD_SET */

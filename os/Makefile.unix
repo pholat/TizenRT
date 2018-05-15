@@ -464,8 +464,6 @@ PASS1_BUILDIR = $(BOARD_DIR)/userspace
 pass1deps: pass1dep $(USERLIBS)
 
 pass1: pass1deps
-	echo "AAAAAAAAAA"
-	$(call GEN_OTA_HEADER)
 ifeq ($(CONFIG_BUILD_2PASS),y)
 	$(Q) if [ ! -d "$(PASS1_BUILDIR)" ]; then \
 		echo "ERROR: PASS1_BUILDIR does not exist"; \
@@ -555,8 +553,10 @@ ota_img:
 
 # pass1dep: Create pass1 build dependencies
 # pass2dep: Create pass2 build dependencies
+fooo:
+	$(call GEN_OTA_HEADER)
 
-pass1dep: context tools/mkdeps$(HOSTEXEEXT)
+pass1dep:fooo context tools/mkdeps$(HOSTEXEEXT)
 	$(Q) for dir in $(USERDEPDIRS) ; do \
 		$(MAKE) -C $$dir TOPDIR="$(TOPDIR)" EXTDIR="$(EXTDIR)" depend ; \
 	done

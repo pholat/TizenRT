@@ -25,7 +25,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <net/lwip/netif.h>
-#include <ocstack.h>
+//#include <ocstack.h>
 #include "uuid/uuid.h"
 #include <stdlib.h>
 
