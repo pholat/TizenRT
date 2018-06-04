@@ -463,20 +463,21 @@ typedef struct ip_mreq {
 
 /* FD_SET used for lwip_select */
 #ifndef FD_SET
-#undef  FD_SETSIZE
+#   undef  FD_SETSIZE
 /* Make FD_SETSIZE match NUM_SOCKETS in socket.c */
-#define FD_SETSIZE    (LWIP_SOCKET_OFFSET + MEMP_NUM_NETCONN)
-#define FDSETSAFESET(n, code) do { \
+#   define FD_SETSIZE    (LWIP_SOCKET_OFFSET + MEMP_NUM_NETCONN)
+#   define FDSETSAFESET(n, code) do { \
 		if (((n) - LWIP_SOCKET_OFFSET < MEMP_NUM_NETCONN) && (((int)(n) - LWIP_SOCKET_OFFSET) >= 0)) { \
 		code; } } while (0)
-#define FDSETSAFEGET(n, code) (((n) - LWIP_SOCKET_OFFSET < MEMP_NUM_NETCONN) && (((int)(n) - LWIP_SOCKET_OFFSET) >= 0) ?\
+#   define FDSETSAFEGET(n, code) (((n) - LWIP_SOCKET_OFFSET < MEMP_NUM_NETCONN) && (((int)(n) - LWIP_SOCKET_OFFSET) >= 0) ?\
 		(code) : 0)
-#define FD_SET(n, p)  FDSETSAFESET(n, (p)->fd_bits[((n)-LWIP_SOCKET_OFFSET)/8] |=  (1 << (((n)-LWIP_SOCKET_OFFSET) & 7)))
-#define FD_CLR(n, p)  FDSETSAFESET(n, (p)->fd_bits[((n)-LWIP_SOCKET_OFFSET)/8] &= ~(1 << (((n)-LWIP_SOCKET_OFFSET) & 7)))
-#define FD_ISSET(n, p) FDSETSAFEGET(n, (p)->fd_bits[((n)-LWIP_SOCKET_OFFSET)/8] &   (1 << (((n)-LWIP_SOCKET_OFFSET) & 7)))
-#define FD_ZERO(p)    memset((void*)(p), 0, sizeof(*(p)))
+#   define FD_SET(n, p)  FDSETSAFESET(n, (p)->fd_bits[((n)-LWIP_SOCKET_OFFSET)/8] |=  (1 << (((n)-LWIP_SOCKET_OFFSET) & 7)))
+#   define FD_CLR(n, p)  FDSETSAFESET(n, (p)->fd_bits[((n)-LWIP_SOCKET_OFFSET)/8] &= ~(1 << (((n)-LWIP_SOCKET_OFFSET) & 7)))
+#   define FD_ISSET(n, p) FDSETSAFEGET(n, (p)->fd_bits[((n)-LWIP_SOCKET_OFFSET)/8] &   (1 << (((n)-LWIP_SOCKET_OFFSET) & 7)))
+#   define FD_ZERO(p)    memset((void*)(p), 0, sizeof(*(p)))
 
 #elif LWIP_SOCKET_OFFSET
+#   define FD_SETSIZE    (LWIP_SOCKET_OFFSET + MEMP_NUM_NETCONN)
 #if 0
 #error LWIP_SOCKET_OFFSET does not work with external FD_SET!
 #endif

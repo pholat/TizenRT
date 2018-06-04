@@ -28,6 +28,7 @@
 #include <math.h>
 #include <slsi_wifi/slsi_wifi_utils.h>
 #include "output_functions.h"
+#include "../../../../../hal/common/ubus.h"
 // the mm functions are badly guarded with CONFIG_DEBUG
 #ifndef CONFIG_DEBUG
 #undef CONFIG_EXAMPLES_SLSIDEMO_MEM_CHECK
@@ -159,6 +160,10 @@ static bool check_security_str(char *sec)
 void sw_linkUpHandler(slsi_reason_t *reason)
 {
 	g_connection_state = STATE_CONNECTED;
+    Evt evt;
+    evt.no     = EvtInetUp;
+    evt.size   = 0;
+    notify_bus_evt(&evt);
 	if (g_mode == SLSI_WIFI_STATION_IF) {
 		g_join_result = reason->reason_code;	// store result code for main thread
 		char connectedApName[WPA_MAX_SSID_LEN];
@@ -185,6 +190,9 @@ void sw_linkUpHandler(slsi_reason_t *reason)
 void sw_linkDownHandler(slsi_reason_t *reason)
 {
 	g_connection_state = STATE_DISCONNECTED;
+    Evt evt;
+    evt.no     = EvtInetDown;
+    evt.size   = 0;
 	if (g_mode == SLSI_WIFI_STATION_IF) {
 		if (reason) {
 			printf("Disconnected from network %s reason_code: %d %s\n", reason->bssid, reason->reason_code, reason->locally_generated ? "(locally_generated)" : "");
@@ -751,5 +759,5 @@ int slsi_wifi_main(int argc, char *argv[])
 
 		result = parseCmdLine(argc, argv);
 	}
-	return result;
+	return 0;
 }
