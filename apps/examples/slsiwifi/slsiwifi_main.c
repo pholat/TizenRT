@@ -39,8 +39,6 @@
 
 #include "slsiwifi_main.h"
 
-#include "../../../../../target_artik/tdoa_ms/ubus.h"
-
 #define DEBUG     0
 /* connections states */
 #define STATE_DISCONNECTED          0

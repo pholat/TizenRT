@@ -101,7 +101,7 @@
 #include <arpa/inet.h>
 #include <semaphore.h>
 
-#include "../../../../target_artik/tdoa_ms/ubus.h"
+#include "../../../../hal/common/ubus.h"
 
 /****************************************************************************
  * Global Data

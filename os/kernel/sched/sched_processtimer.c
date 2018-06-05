@@ -72,9 +72,6 @@
  * Pre-processor Definitions
  ************************************************************************/
 
-#ifndef CONFIG_SCHED_CPULOAD_TIMECONSTANT
-#define CONFIG_SCHED_CPULOAD_TIMECONSTANT 2
-#endif
 
 /************************************************************************
  * Private Type Declarations

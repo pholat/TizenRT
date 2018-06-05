@@ -66,6 +66,9 @@
 
 #ifdef CONFIG_SCHED_CPULOAD
 
+#ifndef CONFIG_SCHED_CPULOAD_TIMECONSTANT
+#define CONFIG_SCHED_CPULOAD_TIMECONSTANT 2
+#endif
 /************************************************************************
  * Pre-processor Definitions
  ************************************************************************/
