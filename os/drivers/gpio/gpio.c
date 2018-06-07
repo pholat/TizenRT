@@ -219,8 +219,11 @@ static void gpio_sample(FAR struct gpio_upperhalf_s *priv)
  *    notify file descriptor. It is necessary to handle async I/O.
  *
  ****************************************************************************/
+extern uint64_t ISR_MADE_TIME;
+#include <tinyara/clock.h>
 static void gpio_interrupt(FAR struct gpio_upperhalf_s *upper)
 {
+    ISR_MADE_TIME=clock_systimer();
 	DEBUGASSERT(upper);
 	gpio_sample(upper);
 }
