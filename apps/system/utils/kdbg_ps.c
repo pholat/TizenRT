@@ -54,6 +54,10 @@
 #include <stdio.h>
 #include <tinyara/sched.h>
 
+#if CONFIG_SCHED_CPULOAD
+#include <tinyara/clock.h>
+#endif
+
 static const char *kdbg_statenames[] = {
 	"INVALID ",
 	"PENDING ",
@@ -79,7 +83,27 @@ static const char *kdbg_ttypenames[4] = {
 
 static void kdbg_pseach(FAR struct tcb_s *tcb, FAR void *arg)
 {
-	printf("%5d | %4d | %4s | %7s | %c%c | %8s", tcb->pid, tcb->sched_priority, tcb->flags & TCB_FLAG_ROUND_ROBIN ? "RR  " : "FIFO", kdbg_ttypenames[(tcb->flags & TCB_FLAG_TTYPE_MASK) >> TCB_FLAG_TTYPE_SHIFT], tcb->flags & TCB_FLAG_NONCANCELABLE ? 'N' : ' ', tcb->flags & TCB_FLAG_CANCEL_PENDING ? 'P' : ' ', kdbg_statenames[tcb->task_state]);
+#if CONFIG_SCHED_CPULOAD
+    struct cpuload_s cpuload={0,0};
+    clock_cpuload(tcb->pid, &cpuload);
+#endif
+	printf("%5d | %4d | %4s | %7s | %c%c | %8s"
+#if CONFIG_SCHED_CPULOAD
+            "| %5d | %5d"
+#endif
+            ""
+            ,tcb->pid
+            ,tcb->sched_priority
+            ,tcb->flags & TCB_FLAG_ROUND_ROBIN ? "RR  " : "FIFO"
+            ,kdbg_ttypenames[(tcb->flags & TCB_FLAG_TTYPE_MASK) >> TCB_FLAG_TTYPE_SHIFT]
+            ,tcb->flags & TCB_FLAG_NONCANCELABLE ? 'N' : ' '
+            ,tcb->flags & TCB_FLAG_CANCEL_PENDING ? 'P' : ' '
+            ,kdbg_statenames[tcb->task_state]
+#if CONFIG_SCHED_CPULOAD
+            ,cpuload.active
+            ,100*cpuload.active/cpuload.total
+#endif
+            );
 #if CONFIG_TASK_NAME_SIZE > 0
 	printf(" | %s", tcb->name);
 #endif
@@ -90,8 +114,8 @@ int kdbg_ps(int argc, char **args)
 {
 #if CONFIG_TASK_NAME_SIZE > 0
 	printf("\n");
-	printf("  PID | PRIO | FLAG |  TYPE   | NP |  STATUS  | NAME\n");
-	printf("------|------|------|---------|----|----------|----------\n");
+	printf("  PID | PRIO | FLAG |  TYPE   | NP |  STATUS | TICKS | PRC \% | NAME\n");
+	printf("------|------|------|---------|----|---------|-------|--------|-----\n");
 #else
 	printf("\n");
 	printf("  PID | PRIO | FLAG |  TYPE   | NP |  STATUS\n");

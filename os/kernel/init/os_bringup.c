@@ -281,7 +281,7 @@ static inline void os_do_appstart(void)
 	DEBUGASSERT(USERSPACE->us_entrypoint != NULL);
 	pid = task_create("appmain", SCHED_PRIORITY_DEFAULT, CONFIG_USERMAIN_STACKSIZE, USERSPACE->us_entrypoint, (FAR char *const *)NULL);
 #else
-	pid = task_create("appmain", SCHED_PRIORITY_DEFAULT, CONFIG_USERMAIN_STACKSIZE, (main_t)CONFIG_USER_ENTRYPOINT, (FAR char *const *)NULL);
+	pid = task_create("appmain", SCHED_PRIORITY_DEFAULT+20, CONFIG_USERMAIN_STACKSIZE, (main_t)CONFIG_USER_ENTRYPOINT, (FAR char *const *)NULL);
 #endif
 	ASSERT(pid > 0);
 }

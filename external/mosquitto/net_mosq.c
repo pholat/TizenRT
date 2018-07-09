@@ -343,6 +343,7 @@ int _mosquitto_try_connect(struct mosquitto *mosq, const char *host, uint16_t po
 			mosq->connect_ainfo = ainfo = NULL;
 #endif
 			errno = s;
+            _mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "x1");
 			return MOSQ_ERR_EAI;
 		}
 #if defined(__TINYARA__)
@@ -353,6 +354,7 @@ int _mosquitto_try_connect(struct mosquitto *mosq, const char *host, uint16_t po
 	for (rp = ainfo; rp != NULL; rp = rp->ai_next) {
 		*sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 		if (*sock == INVALID_SOCKET) {
+            _mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "x3");
 			continue;
 		}
 
@@ -362,12 +364,14 @@ int _mosquitto_try_connect(struct mosquitto *mosq, const char *host, uint16_t po
 			((struct sockaddr_in6 *)rp->ai_addr)->sin6_port = htons(port);
 		} else {
 			COMPAT_CLOSE(*sock);
+                    _mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "x5");
 			continue;
 		}
 
 		if (bind_address) {
 			for (rp_bind = ainfo_bind; rp_bind != NULL; rp_bind = rp_bind->ai_next) {
 				if (bind(*sock, rp_bind->ai_addr, rp_bind->ai_addrlen) == 0) {
+                    _mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "x4");
 					break;
 				}
 			}
@@ -419,6 +423,7 @@ int _mosquitto_try_connect(struct mosquitto *mosq, const char *host, uint16_t po
 	}
 #if defined(__TINYARA__)
 	if (*sock == INVALID_SOCKET) {
+        _mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "x2");
 		return MOSQ_ERR_NO_CONN;
 	}
 #endif
@@ -494,11 +499,13 @@ int _mosquitto_socket_connect(struct mosquitto *mosq, const char *host, uint16_t
 #endif
 
 	if (!mosq || !host || !port) {
+        _mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Error: x");
 		return MOSQ_ERR_INVAL;
 	}
 
 	rc = _mosquitto_try_connect(mosq, host, port, &sock, bind_address, blocking);
 	if (rc > 0) {
+			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Error: 0");
 		return rc;
 	}
 
@@ -510,6 +517,7 @@ int _mosquitto_socket_connect(struct mosquitto *mosq, const char *host, uint16_t
 
 		if (mosq->ssl_ctx == NULL) {
 			COMPAT_CLOSE(sock);
+			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Error: 1");
 			return MOSQ_ERR_NOMEM;
 		}
 
@@ -533,12 +541,14 @@ int _mosquitto_socket_connect(struct mosquitto *mosq, const char *host, uint16_t
 
 		if (mosq->net == NULL) {
 			COMPAT_CLOSE(sock);
+			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Error: 2");
 			return MOSQ_ERR_TLS;
 		}
 		((mbedtls_net_context *)mosq->net)->fd = (int)sock;
 		mbedtls_ssl_set_bio(mosq->ssl_ctx, mosq->net, mbedtls_net_send, mbedtls_net_recv, NULL);
 
 		if (mosquitto__socket_connect_tls(mosq)) {
+			_mosquitto_log_printf(mosq, MOSQ_LOG_ERR, "Error: 3");
 			return MOSQ_ERR_TLS;
 		}
 	}

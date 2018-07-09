@@ -381,7 +381,8 @@ static void _up_assert(int errorcode)
 
 	if (current_regs || (this_task())->pid == 0) {
 		(void)irqsave();
-		for (;;) {
+        uint32_t i=0;
+		for (;i<1000;++i) {
 #ifdef CONFIG_ARCH_LEDS
 			board_led_on(LED_PANIC);
 			up_mdelay(250);
@@ -389,6 +390,7 @@ static void _up_assert(int errorcode)
 			up_mdelay(250);
 #endif
 		}
+        (void)boardctl(BOARDIOC_RESET, 0);
 	} else {
 		exit(errorcode);
 	}

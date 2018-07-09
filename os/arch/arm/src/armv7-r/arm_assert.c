@@ -91,9 +91,7 @@
 #include "mpu.h"
 #endif
 #include <stdbool.h>
-#ifdef CONFIG_BOARD_ASSERT_AUTORESET
 #include <sys/boardctl.h>
-#endif
 #ifdef CONFIG_DEBUG_DISPLAY_SYMBOL
 #include <stdio.h>
 bool abort_mode = false;
@@ -906,14 +904,18 @@ static void _up_assert(int errorcode)
 
 	if (g_upassert || current_regs || (this_task())->pid == 0) {
 		(void)irqsave();
-		for (;;) {
+        uint32_t i=0;
+		for (;i<100;++i) {
 #ifdef CONFIG_ARCH_LEDS
 			board_autoled_on(LED_PANIC);
 			up_mdelay(250);
 			board_autoled_off(LED_PANIC);
 			up_mdelay(250);
+#else
+            up_mdelay(250);
 #endif
 		}
+        (void)boardctl(BOARDIOC_RESET, 0);
 	} else {
 		exit(errorcode);
 	}

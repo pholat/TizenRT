@@ -104,17 +104,22 @@ def translateTinyaraLogs(options):
     filename = os.path.join(options.inputFile)
     with open(filename, "r") as rawLogs:
         for line in rawLogs:
-            if (line.isspace()):
-                continue
-            lineList = line.strip().split(None, 2)
-            time = item.extractTime(lineList[0])
-            pid = item.extractPid(lineList[1])
-            pair_type = item.extractPairType(lineList[2])
-            msg = item.extractMsg(lineList[2])
-            translatedLine = item.composeLine()
-            if (options.verbose == True):
-                print translatedLine
-            item.addLineToFtraceLogs(translatedLine)
+            try:
+                if (line.isspace()):
+                    continue
+                lineList = line.strip().split(None, 2)
+                time = item.extractTime(lineList[0])
+                pid = item.extractPid(lineList[1])
+                pair_type = item.extractPairType(lineList[2])
+                msg = item.extractMsg(lineList[2])
+                translatedLine = item.composeLine()
+                if (options.verbose == True):
+                    print translatedLine
+                item.addLineToFtraceLogs(translatedLine)
+            except:
+                print "ERR on: "
+                print line
+                raise
     return True
 
 

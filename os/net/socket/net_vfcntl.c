@@ -104,7 +104,7 @@ int net_vfcntl(int sockfd, int cmd, va_list ap)
 	int err = 0;
 	int ret = 0;
 
-	nvdbg("sockfd=%d cmd=%d\n", sockfd, cmd);
+	// nvdbg("sockfd=%d cmd=%d\n", sockfd, cmd);
 
 	/* Verify that the sockfd corresponds to valid, allocated socket */
 

@@ -94,6 +94,7 @@
 #define _FOTABASE       (0x1900)	/* FOTA ioctl commands */
 #define _GPIOBASE       (0x2000)	/* GPIO ioctl commands */
 #define _TMBASE         (0x2100)	/* Task Management ioctl commands */
+#define _UWBBASE        (0x2200)    /* UWB dev ioctl */
 #define _TESTIOCBASE (0xfe00)	/* KERNEL TEST DRV module ioctl commands */
 
 /* boardctl() commands share the same number space */
@@ -336,6 +337,11 @@
 #define FOTA_SET_PART      _FOTAIOC(0x0002)
 #define FOTA_SET_BIN       _FOTAIOC(0x0003)
 #define FOTA_SET_PARAM     _FOTAIOC(0x0004)
+
+#define _UWBIOCVALID(c)     (_IOC_TYPE(c) == _UWBBASE)
+#define _UWBIOC(nr)       _IOC(_UWBBASE, nr)
+#define UWB_ATTACH          _FOTAIOC(0x0001)
+#define UWB_ENABLE          _FOTAIOC(0x0002)
 
 /* GPIO driver ioctl definitions ********************************************/
 /* (see include/tinyara/gpio.h */

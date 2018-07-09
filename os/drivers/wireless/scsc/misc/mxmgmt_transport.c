@@ -143,7 +143,7 @@ static int mxmgmt_thread_start(struct mxmgmt_transport *mxmgmt_transport)
 
 	sem_init(&th->selectsem, 0, 0);
     static pthread_attr_t attr;
-    struct sched_param st_setparam={.sched_priority = 101};
+    struct sched_param st_setparam={.sched_priority = 111};
     pthread_attr_init(&attr);
     pthread_attr_setschedparam(&attr, &st_setparam);
 	th->task = pthread_create(&th->selecttid, &attr, (pthread_startroutine_t)mxmgmt_thread_function, (pthread_addr_t)mxmgmt_transport);

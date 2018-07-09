@@ -180,13 +180,13 @@ fotahal_return_t fotahal_write(fotahal_handle_t handle, const char *buffer, uint
 	}
 
 #ifdef CONFIG_SYSTEM_FOTA_SET_SPECIFIC
-	if (g_partition_set == false) {
-		return FOTAHAL_RETURN_PART_NOTSET;
-	}
-
-	if (g_binary_set == false) {
-		return FOTAHAL_RETURN_BIN_NOTSET;
-	}
+//	if (g_partition_set == false) {
+//		return FOTAHAL_RETURN_PART_NOTSET;
+//	}
+//
+//	if (g_binary_set == false) {
+//		return FOTAHAL_RETURN_BIN_NOTSET;
+//	}
 #endif
 
 	ret = write(g_fota_fd, buffer, bin_size);
