@@ -61,6 +61,7 @@
 
 #include <tinyara/irq.h>
 #include <tinyara/gpio.h>
+#include <stdint.h>
 
 #include "chip.h"
 #include "chip/s5jt200_gpio.h"
@@ -267,6 +268,11 @@ void s5j_gpiowrite(uint32_t pinset, bool value);
  *
  ****************************************************************************/
 bool s5j_gpioread(uint32_t pinset);
+
+
+uint8_t s5j_gpio_irqvector(uint32_t pincfg);
+
+void s5j_gpio_clear_pending(uint32_t pincfg);
 
 #undef EXTERN
 #ifdef __cplusplus
